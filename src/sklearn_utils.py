@@ -17,14 +17,21 @@ def iter_train_test_split(X, y, train_size: float):
     as library doesn't give option for just one split.'
     """
     stratifier = IterativeStratification(
-        n_splits=2, order=1, sample_distribution_per_fold=[1.0-train_size, train_size, ])
+        n_splits=2,
+        order=1,
+        sample_distribution_per_fold=[
+            1.0 - train_size,
+            train_size,
+        ],
+    )
     train_indices, test_indices = next(stratifier.split(X, y))
-    if type(X)==pd.DataFrame:
+    if type(X) == pd.DataFrame:
         X_train, X_test = X.iloc[train_indices], X.iloc[test_indices]
     else:
         X_train, X_test = X[train_indices], X[test_indices]
     y_train, y_test = y[train_indices], y[test_indices]
     return X_train, X_test, y_train, y_test
+
 
 def simple_feature_engineering(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -37,19 +44,24 @@ def simple_feature_engineering(df: pd.DataFrame) -> pd.DataFrame:
     :return:
     """
     # TODO: Add to this feature engineering pipeline after more in depth eda.
-    df=df.copy()
-    df['title_len'] = df['policy_title'].str.len()
-    df['description_len']=df['description_text'].str.len()
-    df['num_sentences_description']=df['description_text'].str.split('.').str.len()
-    df['num_sentences_title']=df['description_text'].str.split('.').str.len()
-    df['num_words_description']=df['description_text'].str.split().str.len()
-    df['num_words_title']=df['policy_title'].str.split().str.len()
+    df = df.copy()
+    df["title_len"] = df["policy_title"].str.len()
+    df["description_len"] = df["description_text"].str.len()
+    df["num_sentences_description"] = df["description_text"].str.split(".").str.len()
+    df["num_sentences_title"] = df["description_text"].str.split(".").str.len()
+    df["num_words_description"] = df["description_text"].str.split().str.len()
+    df["num_words_title"] = df["policy_title"].str.split().str.len()
     return df
 
-def select_col(df, col='full_text'):
-    return df[col] #lambda's not picklable in sklearn pipeline, hence this strange looking one-liner.
+
+def select_col(df, col="full_text"):
+    return df[
+        col
+    ]  # lambda's not picklable in sklearn pipeline, hence this strange looking one-liner.
+
 
 from sklearn.metrics import hamming_loss
+
 
 def construct_pipeline(max_df: float = 0.5) -> sklearn.pipeline.Pipeline:
     """
@@ -70,21 +82,40 @@ def construct_pipeline(max_df: float = 0.5) -> sklearn.pipeline.Pipeline:
     :param max_df: Set a lower value if you want more corpus specific stop words (these generally add noise).
     :return:
     """
-    pipeline_text = Pipeline([
-    ("select_text_col",FunctionTransformer(select_col)), # I know there's a more canonical way of doing this line, but I reached a bug so hacking for speed.
-    ('tfidf', TfidfVectorizer(stop_words='english', lowercase=False, ngram_range=(1,1),min_df=0.2,max_df=max_df)),
-    ])
+    pipeline_text = Pipeline(
+        [
+            (
+                "select_text_col",
+                FunctionTransformer(select_col),
+            ),  # I know there's a more canonical way of doing this line, but I reached a bug so hacking for speed.
+            (
+                "tfidf",
+                TfidfVectorizer(
+                    stop_words="english",
+                    lowercase=False,
+                    ngram_range=(1, 1),
+                    max_df=max_df,
+                ),
+            ),
+        ]
+    )
 
-
-    full_pipe = Pipeline([
-        ('features', FeatureUnion([
-            ('pipeline_text', pipeline_text),
-            ('feature_engineering',TextFeatureEngineering()),
-            ])),
-         ('clf', ClassifierChain(RandomForestClassifier()))
-    ]
+    full_pipe = Pipeline(
+        [
+            (
+                "features",
+                FeatureUnion(
+                    [
+                        ("pipeline_text", pipeline_text),
+                        ("feature_engineering", TextFeatureEngineering()),
+                    ]
+                ),
+            ),
+            ("clf", ClassifierChain(RandomForestClassifier())),
+        ]
     )
     return full_pipe
+
 
 class TextFeatureEngineering(BaseEstimator, TransformerMixin):
     """
@@ -94,22 +125,42 @@ class TextFeatureEngineering(BaseEstimator, TransformerMixin):
     use spacy to get named entities etc. Note the use of logs to reflect the power law-esque
     distributions of text lengths.
     """
+
     def __init__(self, apply_log_transform=False):
         self.apply_log_transform = apply_log_transform
+
     def fit(self, X, y=None):
         return self
+
     def transform(self, X, y=None):
-        X=X.copy()
-        X['full_text'] = X['policy_title']+': '+X['description_text']
+        X = X.copy()
+        X["full_text"] = X["policy_title"] + ": " + X["description_text"]
         if self.apply_log_transform:
-            X['num_sentences_description']=np.log(X['description_text'].str.split('.').str.len().astype(float))
-            X['num_sentences_title']=np.log(X['description_text'].str.split('.').str.len().astype(float))
-            X['num_words_description']=np.log(X['description_text'].str.split().str.len().astype(float))
-            X['num_words_title']=np.log(X['policy_title'].str.split().str.len().astype(float))
+            X["num_sentences_description"] = np.log(
+                X["description_text"].str.split(".").str.len().astype(float)
+            )
+            X["num_sentences_title"] = np.log(
+                X["description_text"].str.split(".").str.len().astype(float)
+            )
+            X["num_words_description"] = np.log(
+                X["description_text"].str.split().str.len().astype(float)
+            )
+            X["num_words_title"] = np.log(
+                X["policy_title"].str.split().str.len().astype(float)
+            )
         else:
-            X['num_sentences_description']=X['description_text'].str.split('.').str.len()
-            X['num_sentences_title']=X['description_text'].str.split('.').str.len()
-            X['num_words_description']=X['description_text'].str.split().str.len()
-            X['num_words_title']=X['policy_title'].str.split().str.len()
-        X=X[['num_sentences_description','num_sentences_title','num_words_description','num_words_title']]
+            X["num_sentences_description"] = (
+                X["description_text"].str.split(".").str.len()
+            )
+            X["num_sentences_title"] = X["description_text"].str.split(".").str.len()
+            X["num_words_description"] = X["description_text"].str.split().str.len()
+            X["num_words_title"] = X["policy_title"].str.split().str.len()
+        X = X[
+            [
+                "num_sentences_description",
+                "num_sentences_title",
+                "num_words_description",
+                "num_words_title",
+            ]
+        ]
         return X.to_numpy()

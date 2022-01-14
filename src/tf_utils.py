@@ -3,12 +3,19 @@ import matplotlib.pyplot as plt
 import math
 import numpy as np
 import tensorflow as tf
+import tensorflow_addons as tfa
+from transformers import TFAutoModelForSequenceClassification
 
 K = keras.backend
 
 
-def create_tokenized_ds(tokenizer,
-        X, y, text_column: str = "description_text", model_name: str = "bert-base-cased", batch_size: int = 16
+def create_tokenized_ds(
+    tokenizer,
+    X,
+    y,
+    text_column: str = "description_text",
+    model_name: str = "bert-base-cased",
+    batch_size: int = 16,
 ):
     """
     Create a tokenized batched tensorflow dataset from. This function is incomplete but the idea is to ensure
@@ -52,8 +59,14 @@ class ExponentialLearningRate(keras.callbacks.Callback):
         )
 
 
-def find_learning_rate(model, X, epochs: int = 1, min_rate: float = 10 ** -10, max_rate: float = 10 ** -1.5,
-                       batch_size: int = 16):
+def find_learning_rate(
+    model,
+    X,
+    epochs: int = 1,
+    min_rate: float = 10 ** -10,
+    max_rate: float = 10 ** -1.5,
+    batch_size: int = 16,
+):
     init_weights = model.get_weights()
     iterations = math.ceil(len(X)) * epochs
     factor = np.exp(np.log(max_rate / min_rate) / iterations)
@@ -65,6 +78,32 @@ def find_learning_rate(model, X, epochs: int = 1, min_rate: float = 10 ** -10, m
     K.set_value(model.optimizer.learning_rate, init_lr)
     model.set_weights(init_weights)
     return exp_lr.rates, exp_lr.losses
+
+
+def get_model(
+    checkpoint: str = "distilbert-base-cased", seq_classif_dropout: float = 0.25
+):
+    """
+    Creates a model with classification head. Freezes the BERT default so only the head
+    is trainable. Pay attention to dropout as we have a small dataset.
+
+    :param checkpoint: Huggingface checkpoint.
+    :param seq_classif_dropout:
+    :return:
+    """
+    model = TFAutoModelForSequenceClassification.from_pretrained(
+        checkpoint, seq_classif_dropout=seq_classif_dropout, num_labels=10
+    )
+    model.layers[0].trainable = False
+    loss = tf.keras.losses.BinaryCrossentropy(from_logits=True)
+
+    cb = tf.keras.callbacks.ReduceLROnPlateau(patience=5)
+    model.compile(
+        optimizer="adam",
+        loss=loss,
+        metrics=[tfa.metrics.HammingLoss(mode="multilabel")],
+    )
+    return model
 
 
 def plot_lr_vs_loss(rates: list, losses: list):
@@ -87,13 +126,14 @@ class OneCycleScheduler(keras.callbacks.Callback):
     """
     Implements one cycle learning rate schedule for speeding up training.
     """
+
     def __init__(
-            self,
-            iterations,
-            max_rate,
-            start_rate=None,
-            last_iterations=None,
-            last_rate=None,
+        self,
+        iterations,
+        max_rate,
+        start_rate=None,
+        last_iterations=None,
+        last_rate=None,
     ):
         self.iterations = iterations
         self.max_rate = max_rate
