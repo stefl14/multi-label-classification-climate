@@ -1,0 +1,23 @@
+{
+    "os": "Linux-5.17.15-76051715-generic-x86_64-with-glibc2.35",
+    "python": "3.9.12",
+    "heartbeatAt": "2022-07-02T16:35:00.062973",
+    "startedAt": "2022-07-02T16:34:59.176558",
+    "docker": null,
+    "gpu": "NVIDIA GeForce RTX 3050 Ti Laptop GPU",
+    "gpu_count": 1,
+    "cpu_count": 16,
+    "cuda": null,
+    "args": null,
+    "state": "running",
+    "program": "notebooks/cpr-task-nb.ipynb",
+    "root": "/home/stefan/PycharmProjects/multi-label-classification-climate",
+    "git": {
+        "remote": "git@github.com:steflav14/multi-label-classification-climate.git",
+        "commit": "2bb473081283bdda31757ce966ab469230e3c5b8"
+    },
+    "email": "stefl141193@gmail.com",
+    "host": "pop-os",
+    "username": "stefan",
+    "executable": "/home/stefan/anaconda3/envs/multi-label-classification-climate/bin/python"
+}

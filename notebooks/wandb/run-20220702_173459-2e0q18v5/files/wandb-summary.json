@@ -1,0 +1,1 @@
+{"grid_score": 0.15083333333333332, "grid_std": 0.038206404023278906, "_timestamp": 1656781096, "_runtime": 1397, "_step": 3, "grid_params": {"clf__classifier__n_estimators": 10}}

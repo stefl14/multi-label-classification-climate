@@ -11,10 +11,16 @@ from skmultilearn.problem_transform import ClassifierChain
 
 
 def iter_train_test_split(X, y, train_size: float):
-    """Custom iterative train test split which
-    'maintains balanced representation with respect
-    to order-th label combinations. Function needed
-    as library doesn't give option for just one split.'
+    """
+    Custom iterative stratification for train-test split (skmultilearn doesn't support a single split).
+
+    Args:
+        X: features
+        y: label
+        train_size:
+
+    Returns:
+
     """
     stratifier = IterativeStratification(
         n_splits=2,
@@ -35,15 +41,16 @@ def iter_train_test_split(X, y, train_size: float):
 
 def simple_feature_engineering(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Apply simple feature engineering to text columns. This is by no means
-    an exhaustive list of what we could do, just a simple initial experiment that
-    can be added to. For example, we could add proportion of stop words, number of
-    html tags, number of capital letters etc. There is a large number of possibilities
-    for what could be added to this pipeline, informed by more in-depth EDA.
-    :param df: Input df, contains raw text.
-    :return:
+    A simple feature engineering function that adds some engineered features.
+
+    Args:
+        df: pd.DataFrame of text features.
+
+    Returns:
+        pd.DataFrame with additional calculated features.
+
     """
-    # TODO: Add to this feature engineering pipeline after more in depth eda.
+    # TODO: Add to this after more in depth eda.
     df = df.copy()
     df["title_len"] = df["policy_title"].str.len()
     df["description_len"] = df["description_text"].str.len()
@@ -60,34 +67,31 @@ def select_col(df, col="full_text"):
     ]  # lambda's not picklable in sklearn pipeline, hence this strange looking one-liner.
 
 
-from sklearn.metrics import hamming_loss
 
-
-def construct_pipeline(max_df: float = 0.5) -> sklearn.pipeline.Pipeline:
+def construct_pipeline(clf: BaseEstimator = RandomForestClassifier(), max_df: float = 0.5) -> sklearn.pipeline.Pipeline:
     """
-    An sklearn pipeline that concatenates text and engineered features.
-    I've hardcoded some variables here rather than parameterising them because I haven't
-    done much formal experimentation. But obviously in a non rushed section this function
-    would be parameterised with all the hyperparams.
+    Concatenate text and engineered features.
 
-    This function returns something that can be binarised into pickle format (assuming python
-    run time) for easy deployment. This function carries out all preprocessing within the pipeline
-    so that there is no train-serving skew, and so it's easy to tune any step of the pipeline
-    as a hyperparameter.
+    Carries out all preprocessing within pipeline to avoid train-serve skew and
+    returns something that can be put into a pickle binary (useful for Python runtime).
 
-    This pipeline does assume the text request is formatted into a dataframe, even if it's not
-    a batch request (say if someone made a query for a concept). This is a weakness and an
-    artifact of some custom processing. It could easily be fixed up for deployment.
+    Assumes request formatted as a dataframe, something we can fix up later.
 
-    :param max_df: Set a lower value if you want more corpus specific stop words (these generally add noise).
-    :return:
+    Args: max_df: float, maximum document frequency for TF-IDF. To sparsify feature set by ignore likely
+    uninformative words.
+
+    clf: BaseEstimator, sklearn classifier to use.
+
+    Returns:
+        sklearn.pipeline.Pipeline
+
     """
     pipeline_text = Pipeline(
         [
             (
                 "select_text_col",
                 FunctionTransformer(select_col),
-            ),  # I know there's a more canonical way of doing this line, but I reached a bug so hacking for speed.
+            ),  # There's a more canonical way of doing this line, but I reached a bug so hacking for speed.
             (
                 "tfidf",
                 TfidfVectorizer(
@@ -111,7 +115,7 @@ def construct_pipeline(max_df: float = 0.5) -> sklearn.pipeline.Pipeline:
                     ]
                 ),
             ),
-            ("clf", ClassifierChain(RandomForestClassifier())),
+            ("clf", ClassifierChain(clf)),
         ]
     )
     return full_pipe
@@ -119,11 +123,12 @@ def construct_pipeline(max_df: float = 0.5) -> sklearn.pipeline.Pipeline:
 
 class TextFeatureEngineering(BaseEstimator, TransformerMixin):
     """
-    Transformer to pre-process non-text features to fit into a deployable sklearn pipeline.
-    This transformer is far from an exhaustive when it comes to representing non-text features.
-    We could include everything from number of capital letters, fraction of stop words, we could
-    use spacy to get named entities etc. Note the use of logs to reflect the power law-esque
-    distributions of text lengths.
+    Transformer to produce features from text to put into a deployable sklearn pipeline.
+
+    e.g. log transforming text length to reflect the power law-esque
+    distributions found in EDA.
+
+    The features here are not exhaustive but represent a start.
     """
 
     def __init__(self, apply_log_transform=False):
