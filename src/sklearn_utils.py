@@ -61,14 +61,34 @@ def simple_feature_engineering(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def train_test_split_multilabel(
+    df: pd.DataFrame,
+    y,
+    num_folds: int = 5,
+) -> None:
+    """Split data into train and test sets using a smart way to split multilabel data.
+
+    Returns:
+        pd.DataFrame, pd.DataFrame, np.array, np.array
+
+    """
+    mlsd = MultilabelStratifiedKFold(n_splits=num_folds, shuffle=True, random_state=42)
+    for train_index, test_index in mlsd.split(df, y):
+        df_train, df_test = df.iloc[train_index], df.iloc[test_index]
+        y_train, y_test = y[train_index], y[test_index]
+        break
+    return df_train, df_test, y_train, y_test
+
+
 def select_col(df, col="full_text"):
     return df[
         col
     ]  # lambda's not picklable in sklearn pipeline, hence this strange looking one-liner.
 
 
-
-def construct_pipeline(clf: BaseEstimator = RandomForestClassifier(), max_df: float = 0.5) -> sklearn.pipeline.Pipeline:
+def construct_pipeline(
+    clf: BaseEstimator = RandomForestClassifier(), max_df: float = 0.5
+) -> sklearn.pipeline.Pipeline:
     """
     Concatenate text and engineered features.
 
