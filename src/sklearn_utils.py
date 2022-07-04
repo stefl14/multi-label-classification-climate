@@ -1,42 +1,16 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
+import plotly.graph_objects as go
 import sklearn.pipeline
+from iterstrat.ml_stratifiers import MultilabelStratifiedKFold
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.feature_extraction.text import TfidfVectorizer
-from skmultilearn.model_selection import IterativeStratification
-from sklearn.pipeline import Pipeline, FeatureUnion
-from sklearn.preprocessing import FunctionTransformer
+from sklearn.dummy import DummyClassifier
 from sklearn.ensemble import RandomForestClassifier
-from skmultilearn.problem_transform import ClassifierChain
-
-
-def iter_train_test_split(X, y, train_size: float):
-    """
-    Custom iterative stratification for train-test split (skmultilearn doesn't support a single split).
-
-    Args:
-        X: features
-        y: label
-        train_size:
-
-    Returns:
-
-    """
-    stratifier = IterativeStratification(
-        n_splits=2,
-        order=1,
-        sample_distribution_per_fold=[
-            1.0 - train_size,
-            train_size,
-        ],
-    )
-    train_indices, test_indices = next(stratifier.split(X, y))
-    if type(X) == pd.DataFrame:
-        X_train, X_test = X.iloc[train_indices], X.iloc[test_indices]
-    else:
-        X_train, X_test = X[train_indices], X[test_indices]
-    y_train, y_test = y[train_indices], y[test_indices]
-    return X_train, X_test, y_train, y_test
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics import hamming_loss
+from sklearn.multioutput import ClassifierChain
+from sklearn.pipeline import Pipeline, FeatureUnion
+from sklearn.preprocessing import FunctionTransformer, MultiLabelBinarizer
 
 
 def simple_feature_engineering(df: pd.DataFrame) -> pd.DataFrame:
@@ -139,6 +113,87 @@ def construct_pipeline(
         ]
     )
     return full_pipe
+
+
+def predict_fn(df: pd.DataFrame, mlb: MultiLabelBinarizer, pipe):
+    y_true = mlb.transform(df["sectors_list"])
+    y_pred = pipe.predict(df)
+    hl = hamming_loss(y_true, y_pred)
+    return y_true, y_pred, hl
+
+
+def plot_predict_vs_ground_truth(
+    y_true: np.array, y_pred: np.array, mlb: MultiLabelBinarizer
+) -> None:
+    """
+    Plot the predicted vs ground truth.
+
+    Args:
+        y_true:
+        y_pred:
+        mlb:
+
+    Returns:
+
+    """
+    true_test_distribution = y_true.sum(axis=0)
+    predicted_test_distribution = y_pred.sum(axis=0)
+
+    fig = go.Figure(
+        data=[
+            go.Bar(
+                name="ground truth test set",
+                x=mlb.classes_,
+                y=true_test_distribution,
+                yaxis="y",
+                offsetgroup=1,
+            ),
+            go.Bar(
+                name="predicted test set",
+                x=mlb.classes_,
+                y=predicted_test_distribution,
+                yaxis="y2",
+                offsetgroup=2,
+            ),
+        ],
+        layout={
+            "yaxis": {"title": "Num instances"},
+        },
+    )
+
+    # Change the bar mode
+    fig.update_layout(
+        barmode="group", title="Predicted vs True distribution on unseen test set."
+    )
+    return fig
+
+
+def get_naive_baselines(
+    X: np.array, y: np.array, y_true: np.array, df_test: pd.DataFrame
+) -> None:
+    """
+    Get naive baselines for the test set.
+
+    Args:
+        X:
+        y:
+        y_true:
+        df_test:
+
+    Returns:
+
+    """
+    naive_baselines = {}
+    for strategy in ("most_frequent", "stratified", "prior"):
+        dd = DummyClassifier(strategy=strategy)
+        dd.fit(X, y)
+        y_naive = dd.predict(df_test)
+        naive_baselines[strategy] = dd
+        hl = hamming_loss(y_true, y_naive)
+        print(
+            f"Naive baseline to beat on Hamming Loss for strategy {strategy} is: {hl}"
+        )
+    return naive_baselines
 
 
 class TextFeatureEngineering(BaseEstimator, TransformerMixin):
