@@ -158,11 +158,10 @@ def plot_one_vs_rest_success_rates(y_true, y_pred, y_pred_naive, classes):
     return fig
 
 
-def plot_predict_vs_ground_truth(
-    y_true: np.array, y_pred: np.array, mlb: MultiLabelBinarizer
+def plot_label_dist(
+    y_true, mlb: MultiLabelBinarizer
 ) -> None:
-    """
-    Plot the predicted vs ground truth.
+    """Plot distribution of labels for each class.
 
     Args:
         y_true:
@@ -173,28 +172,19 @@ def plot_predict_vs_ground_truth(
 
     """
     true_test_distribution = y_true.sum(axis=0)
-    predicted_test_distribution = y_pred.sum(axis=0)
 
     fig = go.Figure(
         data=[
             go.Bar(
-                name="ground truth test set",
+                name="ground truth distribution",
                 x=mlb.classes_,
                 y=true_test_distribution,
                 yaxis="y",
                 offsetgroup=1,
             ),
-            go.Bar(
-                name="predicted test set",
-                x=mlb.classes_,
-                y=predicted_test_distribution,
-                yaxis="y2",
-                offsetgroup=2,
-            ),
         ],
         layout={
             "yaxis": {"title": "SF Zoo axis"},
-            "yaxis2": {"title": "LA Zoo axis", "overlaying": "y", "side": "right"},
         },
     )
 
