@@ -122,6 +122,20 @@ def predict_fn(df: pd.DataFrame, mlb: MultiLabelBinarizer, model):
     hl = hamming_loss(y_true, y_pred)
     return y_true, y_pred, hl
 
+def compute_cross_entropy_loss(y_true:np.array , y_probas: np.array, epsilon=1e-15):
+    """Compute cross entropy loss for an instance. Needed because sklearn.metrics.log_loss does not
+    work on a single instance.
+
+    Args:
+        y_true: np.array, true labels.
+        y_probas: np.array, predicted probabilities.
+        epsilon: float, small value to avoid log(0).
+
+    Returns:
+        float, cross entropy loss.
+    """
+    return -np.sum(y_true * np.log(y_probas + epsilon))
+
 
 def plot_confusion_matrix(matrix: np.array, class_label: str):
     """
