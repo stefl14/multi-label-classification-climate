@@ -130,6 +130,7 @@ def plot_one_vs_rest_success_rates(y_true, y_pred, y_pred_naive, classes):
         y_pred_naive: predicted labels by naive baseline
 
     Returns:
+        go.Figure
 
     """
     success_df = pd.DataFrame()
@@ -165,10 +166,10 @@ def plot_label_dist(
 
     Args:
         y_true:
-        y_pred:
         mlb:
 
     Returns:
+        go.Figure
 
     """
     true_test_distribution = y_true.sum(axis=0)
