@@ -115,11 +115,47 @@ def construct_pipeline(
     return full_pipe
 
 
-def predict_fn(df: pd.DataFrame, mlb: MultiLabelBinarizer, pipe):
+def predict_fn(df: pd.DataFrame, mlb: MultiLabelBinarizer, model):
     y_true = mlb.transform(df["sectors_list"])
-    y_pred = pipe.predict(df)
+    y_pred = model.predict(df)
     hl = hamming_loss(y_true, y_pred)
     return y_true, y_pred, hl
+
+
+def plot_one_vs_rest_success_rates(y_true, y_pred, y_pred_naive, classes):
+    """Plot one vs rest success rates for a naive baseline and a classifier.
+    Args:
+        y_true: actual labels
+        y_pred: predicted labels by classifier
+        y_pred_naive: predicted labels by naive baseline
+
+    Returns:
+
+    """
+    success_df = pd.DataFrame()
+    success_df["xgb_success"] = 100 * (y_true == y_pred).sum(axis=0) / len(y_true)
+    success_df["naive_success"] = (
+        100 * (y_true == y_pred_naive).sum(axis=0) / len(y_true)
+    )
+    # plot success rate for each class using column names as labels
+    fig = go.Figure(
+        data=[
+            go.Bar(
+                x=classes,
+                y=success_df["xgb_success"],
+                name="OneVsRest Success Rate XGB",
+            ),
+            go.Bar(
+                x=classes,
+                y=success_df["naive_success"],
+                name="OneVsRest Success Rate Naive",
+            ),
+        ]
+    )
+    fig.update_layout(barmode="group")
+    # update title
+    fig.update_layout(title_text="Success Rate for Each Class for Naive and XGB")
+    return fig
 
 
 def plot_predict_vs_ground_truth(
@@ -157,7 +193,8 @@ def plot_predict_vs_ground_truth(
             ),
         ],
         layout={
-            "yaxis": {"title": "Num instances"},
+            "yaxis": {"title": "SF Zoo axis"},
+            "yaxis2": {"title": "LA Zoo axis", "overlaying": "y", "side": "right"},
         },
     )
 
