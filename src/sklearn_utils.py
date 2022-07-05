@@ -11,6 +11,7 @@ from sklearn.metrics import hamming_loss
 from sklearn.multioutput import ClassifierChain
 from sklearn.pipeline import Pipeline, FeatureUnion
 from sklearn.preprocessing import FunctionTransformer, MultiLabelBinarizer
+import plotly.figure_factory as ff
 
 
 def simple_feature_engineering(df: pd.DataFrame) -> pd.DataFrame:
@@ -122,6 +123,48 @@ def predict_fn(df: pd.DataFrame, mlb: MultiLabelBinarizer, model):
     return y_true, y_pred, hl
 
 
+def plot_confusion_matrix(matrix: np.array, class_label: str):
+    """
+    Plot a confusion matrix.
+
+    Args:
+        matrix:
+
+    Returns:
+
+    """
+    matrix = matrix / matrix.sum(axis=0)  # Normalise.
+    x = y = [class_label, "Other"]
+    matrix_text = [[str(y) for y in x] for x in matrix]
+    # change display rounding
+    matrix_text = [[str(round(float(y), 2)) for y in x] for x in matrix_text]
+    # set up figure
+    fig = ff.create_annotated_heatmap(
+        matrix, x=x, y=y, annotation_text=matrix_text, colorscale="Viridis"
+    )
+
+    # add title
+    fig.update_layout(
+        title_text="<i><b>Confusion matrix</b></i>",
+        xaxis=dict(title="Predicted"),
+        yaxis=dict(title="Actual"),
+    )
+
+    # add custom xaxis title
+    fig.add_annotation(
+        dict(
+            font=dict(color="black", size=14),
+            x=0.5,
+            y=-0.15,
+            showarrow=False,
+            text="Predicted value",
+            xref="paper",
+            yref="paper",
+        )
+    )
+    return fig
+
+
 def plot_one_vs_rest_success_rates(y_true, y_pred, y_pred_naive, classes):
     """Plot one vs rest success rates for a naive baseline and a classifier.
     Args:
@@ -159,9 +202,7 @@ def plot_one_vs_rest_success_rates(y_true, y_pred, y_pred_naive, classes):
     return fig
 
 
-def plot_label_dist(
-    y_true, mlb: MultiLabelBinarizer
-) -> None:
+def plot_label_dist(y_true, mlb: MultiLabelBinarizer) -> None:
     """Plot distribution of labels for each class.
 
     Args:
