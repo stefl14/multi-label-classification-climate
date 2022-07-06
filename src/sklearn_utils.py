@@ -137,7 +137,7 @@ def compute_cross_entropy_loss(y_true:np.array , y_probas: np.array, epsilon=1e-
     return -np.sum(y_true * np.log(y_probas + epsilon))
 
 
-def plot_confusion_matrix(matrix: np.array, class_label: str):
+def plot_confusion_matrix(matrix: np.array, class_label: str, normalize: bool = False):
     """
     Plot a confusion matrix.
 
@@ -147,8 +147,9 @@ def plot_confusion_matrix(matrix: np.array, class_label: str):
     Returns:
 
     """
-    matrix = matrix / matrix.sum(axis=0)  # Normalise.
-    x = y = [class_label, "Other"]
+    if normalize:
+        matrix = matrix / matrix.sum(axis=0)  # Normalise.
+    x = y = ["Other", class_label]
     matrix_text = [[str(y) for y in x] for x in matrix]
     # change display rounding
     matrix_text = [[str(round(float(y), 2)) for y in x] for x in matrix_text]
