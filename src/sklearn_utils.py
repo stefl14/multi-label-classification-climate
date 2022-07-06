@@ -160,7 +160,7 @@ def plot_confusion_matrix(matrix: np.array, class_label: str, normalize: bool = 
 
     # add title
     fig.update_layout(
-        title_text="<i><b>Confusion matrix</b></i>",
+        title_text=f"<i><b>OneVsRest Confusion Matrix for {class_label}</b></i>",
         xaxis=dict(title="Predicted"),
         yaxis=dict(title="Actual"),
     )
