@@ -22,8 +22,11 @@ classification datasets in each fold, thus improving bias-variance tradeoff.
 
 ## Structure
 
-Since this repo is mostly a collection of experiments for personal use, it's mostly unstructured. EDA can be found in a notebook (the notebook is messy 
-but the visualisations and markdown comments are well fleshed out for my own future use and reading). The training pipeline can be found in src/sklearn_trainer.py. The results analysis can be found in results_exploration.ipynb (spoiler, the results are really good even without tons of engineering!).
+Since this repo is mostly a collection of experiments for personal use, it's mostly unstructured. 
+* EDA can be found in a notebook (the notebook is messy 
+but the visualisations and markdown comments are well fleshed out for my own future use and reading). 
+* The training pipeline can be found in src/sklearn_trainer.py. 
+* The results analysis can be found in results_exploration.ipynb (spoiler, the results are really good even without tons of engineering!).
 
 ## General setup considerations.
 
