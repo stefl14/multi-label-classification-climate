@@ -1,7 +1,7 @@
 # Multi-Label-Classification Without Deep Learning
 
-The code is in no way production quality and shouldn't be interpreted as such. For anyone reading, you may find the commentary in notebooks
-informative but the code itself less so.
+The code is in no way production quality and shouldn't be interpreted as such for any readers! As such you may find the commentary in notebooks
+informative but the code itself less so... you won't see any Poetry envs and such here, just straight up requirements.txt :).
 
 This repo contains some rough experiments on a relatively small multi-label classification dataset. The goal is to explore some of the difficulties that arise
 with multi-label classification on small datasets, and how these difficulties can be overcome without transfer learning using
