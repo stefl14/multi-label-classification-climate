@@ -5,12 +5,15 @@
 For prying eyes :), this code is in no way production ready and shouldn't be interpreted as such! You may find the commentary in notebooks
 informative but the code itself less so (you won't see any Poetry envs and such here, just straight up requirements.txt and messy GPU stuff that works on my laptop!).
 
-## Uses
-This repo contains some rough experiments on a relatively small multi-label classification dataset. The goal is to explore some of the difficulties that arise
-with multi-label classification on small datasets, and how these difficulties can be overcome without transfer learning using
-large language models. 
+## Description.
+This repo contains some rough experiments on a relatively small multi-label classification dataset. The goal is to identify whether paragraphs belong to particular climate categories (e.g. Agriculture, Electricity, Buildings, etc). This is useful for downstream search tasks. Many paragraphs refer to many
+different categories (up to 10), making this a multi-label challenge.
 
-The main takeaway is that two techniques can be used to drastically improve performance on a multi-label classification dataset:
+The goal is to explore some of the difficulties that arise
+with multi-label classification on small datasets, and how these difficulties can be overcome without transfer learning using
+large language models (spoiler, you can do tons without transfer learning and LLMs). 
+
+The main takeaway is that two techniques can be used on top of traditional Latent Semantic Analysis to drastically improve performance on a multi-label classification dataset:
 
 1. Classifier chains. Classifier chains train One-vs-Rest classifiers for each of the labels and construct randomly ordered chains that pass the predictions of
 the one versus rest classifiers as well as the features. This allows mutual information between labels to be taken into account. For more info, see [here](https://scikit-learn.org/stable/auto_examples/multioutput/plot_classifier_chain_yeast.html).
