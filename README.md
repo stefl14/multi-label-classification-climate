@@ -30,7 +30,7 @@ but the visualisations and markdown comments are well fleshed out for my own fut
 
 ## General setup considerations.
 
-For now, pip install requirements.txt :).
+For now, ```pip install requirements.txt``` and follow the xgboost guide for GPU if you want speed :).
 
 ### Installing XGBoost from source
 
