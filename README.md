@@ -1,8 +1,11 @@
 # Multi-Label-Classification Without Deep Learning
 
-The code is in no way production quality and shouldn't be interpreted as such for any readers! As such you may find the commentary in notebooks
-informative but the code itself less so... you won't see any Poetry envs and such here, just straight up requirements.txt :).
+## Disclaimer
 
+For prying eyes :), this code is in no way production ready and shouldn't be interpreted as such! You may find the commentary in notebooks
+informative but the code itself less so (you won't see any Poetry envs and such here, just straight up requirements.txt and messy GPU stuff that works on my laptop!).
+
+## Uses
 This repo contains some rough experiments on a relatively small multi-label classification dataset. The goal is to explore some of the difficulties that arise
 with multi-label classification on small datasets, and how these difficulties can be overcome without transfer learning using
 large language models. 
@@ -15,10 +18,13 @@ the one versus rest classifiers as well as the features. This allows mutual info
 classification datasets in each fold, thus improving bias-variance tradeoff.
 
 ## Structure
-Since this repo is mostly a collection of experiments for personal use, it's mostly unstructured. The training pipeline can be found in src/sklearn_trainer.py
-and the results
+
+Since this repo is mostly a collection of experiments for personal use, it's mostly unstructured. EDA can be found in a notebook (the notebook is messy 
+but the visualisations and markdown comments are well fleshed out for my own future use and reading). The training pipeline can be found in src/sklearn_trainer.py. The results analysis can be found in results_exploration.ipynb (spoiler, the results are really good even without tons of engineering!).
 
 ## General setup considerations.
+
+For now, pip install requirements.txt :).
 
 ### Installing XGBoost from source
 
