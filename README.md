@@ -1,13 +1,16 @@
 # Multi-Label-Classification Without Deep Learning
 
-This repo contains some rough experiments on a relatively small multi-label classification dataset. The goal is to show some of the difficulties that arise
-with multi-label classification, and how these difficulties can be overcome using relatively unknown techiques that don't require transfer learning using
-large language models. The code is in no way production quality and shouldn't be interpreted as such. For anyone reading, you may find the commentary in notebooks
-informative but the code is not.
+The code is in no way production quality and shouldn't be interpreted as such. For anyone reading, you may find the commentary in notebooks
+informative but the code itself less so.
+
+This repo contains some rough experiments on a relatively small multi-label classification dataset. The goal is to explore some of the difficulties that arise
+with multi-label classification on small datasets, and how these difficulties can be overcome without transfer learning using
+large language models. 
 
 The main takeaway is that two techniques can be used to drastically improve performance on a multi-label classification dataset:
 
-1. Classifier chains. Classifier chains train One-vs-Rest classifiers on a subset of the labels and then use the classifiers to predict the remaining labels sequentially.
+1. Classifier chains. Classifier chains train One-vs-Rest classifiers for each of the labels and construct randomly ordered chains that pass the predictions of
+the one versus rest classifiers as well as the features. This allows mutual information between labels to be taken into account. For more info, see [here](https://scikit-learn.org/stable/auto_examples/multioutput/plot_classifier_chain_yeast.html).
 2. Iterative-Stratification. Iterative stratification is a novel sampling technique so that the training set recapitulates the distribution of the labels in multi-label
 classification datasets in each fold, thus improving bias-variance tradeoff.
 
